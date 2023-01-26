@@ -1,0 +1,15 @@
+version: 2.1
+
+jobs:
+  youtube-video-clipper:
+    image: python:3.8
+    commands:
+      - pip install pydub google-api-python-client
+      - youtube-dl --version
+      - ffmpeg -version
+      - export YOUTUBE_API_KEY="YOUR_API_KEY"
+      - youtube_link="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      - video_id=$(echo $youtube_link | cut -d'=' -f2)
+      - youtube-dl --format mp4 $youtube_link
+      - python -c "from pydub import AudioSegment; video = AudioSegment.from_file('video.mp4', format='mp4'); clip_length = 10 * 1000; num_clips = len(video) / clip_length; for i in range(num_clips):;    clip = video[i * clip_length:(i + 1) * clip_length];    clip.export(f'clip_{i}.mp4', format='mp4');    os.system(f'ffmpeg -i clip_{i}.mp4 -vf scale=-1:376 clip_{i}_916.mp4')"
+      - python -c "from googleapiclient.discovery import build; youtube = build('youtube', 'v3', developerKey=os.environ.get('YOUTUBE_API_KEY')); video_info = youtube.videos().list(part='snippet', id=$video_id).execute(); title = video_info['items'][0]['snippet']['title']; description = video_info['items'][0]['snippet']['description']; tags = video_info['items'][0]['snippet']['tags']; for i in range(num_clips):;    os.system(f'youtube-upload --title={title} --description={description} --tags={','.join(tags)} clip_{i}_916.mp4')"
